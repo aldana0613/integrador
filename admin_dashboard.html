@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrador | Seguridad Industrial</title>
+    <link rel="stylesheet" href="estilos.css">
+    <style>
+        .sidebar .logout-btn {
+            text-align: center !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-window">
+        <div class="title-bar">
+            <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span> 
+            <div class="window-controls">
+                <span class="control-btn" title="Minimizar">_</span>
+                <span class="control-btn" title="Maximizar">☐</span>
+                <span class="control-btn" title="Cerrar">X</span>
+            </div>
+        </div>
+
+        <div class="app-container">
+            <!-- 📌 Sidebar -->
+            <aside class="sidebar">
+                <h2>Módulos</h2>
+                <nav>
+                    <a href="admin_dashboard.html" class="active">📊 Dashboard / Inicio</a>
+                    <a href="incidentes.html">📝 Incidentes</a>
+                    <a href="comentarios_admin.html">💬 Gestión de Comentarios</a>
+                    <a href="capacitaciones.html">📘 Capacitaciones</a>
+                    <!-- BOTÓN CERRAR SESIÓN -->
+                    <a href="login.html" class="logout-btn">➡️ Cerrar Sesión</a>
+                </nav>
+            </aside>
+            
+            <!-- 📌 Contenido Principal -->
+            <main class="main-content">
+                <h2>Dashboard / Inicio</h2>
+
+                <!-- 🔔 Notificaciones Importantes -->
+                <section class="notificaciones">
+                    <h3>Notificaciones Importantes</h3>
+                    <div class="notificacion alerta">
+                        ⚠️ Se ha reportado un accidente en el área de Taller de Maquinaria.
+                    </div>
+                    <div class="notificacion info">
+                        ℹ️ Próxima capacitación: Uso seguro de equipos eléctricos – 1 Oct, 10:00 AM.
+                    </div>
+                </section>
+
+                <!-- 📊 KPIs -->
+                <section class="kpi-grid">
+                    <div class="kpi-card danger">
+                        <h3>Tasa de Frecuencia (LTIFR)</h3>
+                        <p id="ltifr">0</p>
+                    </div>
+                    <div class="kpi-card warning">
+                        <h3>Incidentes Reportados</h3>
+                        <p id="incidentes-count">0</p>
+                    </div>
+                    <div class="kpi-card success">
+                        <h3>Cumplimiento de Inspecciones</h3>
+                        <p id="inspecciones">98%</p>
+                    </div>
+                </section>
+
+                <!-- 📝 Incidencias Recientes -->
+                <section class="tabla-incidencias">
+                    <h3>Incidencias Recientes</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Ubicación</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-incidencias-body">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- 📈 Gráficos -->
+                <section class="chart-container">
+                    <h3>Gráficos de Seguridad</h3>
+                    
+                    <div class="bar-chart">
+                        <h4>Tendencia Mensual de Incidentes</h4>
+                        <div class="bar"><span class="bar-label">Ene</span></div>
+                        <div class="bar"><span class="bar-label">Feb</span></div>
+                        <div class="bar"><span class="bar-label">Mar</span></div>
+                        <div class="bar"><span class="bar-label">Abr</span></div>
+                        <div class="bar"><span class="bar-label">May</span></div>
+                        <div class="bar"><span class="bar-label">Jun</span></div>
+                    </div>
+                </section>
+                <!-- Exportación -->
+                <section class="exportar-section">
+                    <h3>📤 Exportar Reportes</h3>
+                    <div class="export-buttons">
+                        <button class="btn-excel" onclick="exportarExcel('incidentes')">📊 Incidentes a Excel</button>
+                        <button class="btn-excel" onclick="exportarExcel('comentarios')">💬 Comentarios a Excel</button>
+                        <button class="btn-excel" onclick="exportarExcel('capacitaciones')">📘 Capacitaciones a Excel</button>
+                    </div>
+                </section>
+                <script>
+                function exportarExcel(tipo) {
+                    window.open('../backend/exportar_excel.php?tipo=' + tipo, '_blank');
+                }
+                </script>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Función para cargar datos del dashboard
+        async function cargarDashboard() {
+            try {
+                console.log("📊 Cargando datos del dashboard...");
+                
+                // Cargar incidentes
+                const responseIncidentes = await fetch('http://localhost:8081/api/incidentes');
+                const incidentes = await responseIncidentes.json();
+                
+                // Cargar comentarios
+                const responseComentarios = await fetch('http://localhost:8081/api/comentarios');
+                const comentarios = await responseComentarios.json();
+                
+                // Cargar capacitaciones
+                const responseCapacitaciones = await fetch('http://localhost:8081/api/capacitaciones');
+                const capacitaciones = await responseCapacitaciones.json();
+                
+                console.log("✅ Datos cargados:", {
+                    incidentes: incidentes.length,
+                    comentarios: comentarios.length,
+                    capacitaciones: capacitaciones.length
+                });
+                
+                // Actualizar KPIs
+                actualizarKPIs(incidentes, comentarios, capacitaciones);
+                
+                // Actualizar tabla de incidencias recientes
+                actualizarIncidenciasRecientes(incidentes);
+                
+                // Actualizar gráfico
+                actualizarGrafico(incidentes);
+                
+            } catch (error) {
+                console.error('❌ Error cargando dashboard:', error);
+                document.getElementById("incidentes-count").textContent = "Error";
+                document.getElementById("ltifr").textContent = "Error";
+            }
+        }
+
+        // Actualizar KPIs
+        function actualizarKPIs(incidentes, comentarios, capacitaciones) {
+            // KPI: Total de incidentes
+            document.getElementById("incidentes-count").textContent = incidentes.length;
+            
+            // KPI: Tasa de frecuencia (LTIFR) - ejemplo simplificado
+            const ltifr = (incidentes.length / 100 * 10).toFixed(1);
+            document.getElementById("ltifr").textContent = ltifr;
+            
+            // KPI: Comentarios pendientes
+            const comentariosPendientes = comentarios.filter(c => c.estado === 'pendiente').length;
+            // Podemos agregar este KPI si quieres
+            console.log("💬 Comentarios pendientes:", comentariosPendientes);
+        }
+
+        // Actualizar tabla de incidencias recientes
+        function actualizarIncidenciasRecientes(incidentes) {
+            const tabla = document.getElementById("tabla-incidencias-body");
+            tabla.innerHTML = "";
+            
+            // Ordenar por fecha (más recientes primero) y tomar últimos 5
+            const incidentesRecientes = incidentes
+                .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
+                .slice(0, 5);
+            
+            if (incidentesRecientes.length === 0) {
+                tabla.innerHTML = "<tr><td colspan='4'>No hay incidencias registradas</td></tr>";
+                return;
+            }
+            
+            incidentesRecientes.forEach(inc => {
+                const fecha = new Date(inc.fechaHora).toLocaleDateString();
+                const fila = `
+                    <tr>
+                        <td>${fecha}</td>
+                        <td>${inc.tipoIncidencia}</td>
+                        <td>${inc.ubicacion}</td>
+                        <td><span class="estado ${inc.estado?.toLowerCase() || 'pendiente'}">${inc.estado || 'Pendiente'}</span></td>
+                    </tr>`;
+                tabla.innerHTML += fila;
+            });
+        }
+
+        // Actualizar gráfico (manteniendo tu función original)
+        function actualizarGrafico(incidentes) {
+            let meses = {Ene:0, Feb:0, Mar:0, Abr:0, May:0, Jun:0};
+            
+            incidentes.forEach(inc => {
+                if (inc.fechaHora) {
+                    let mes = new Date(inc.fechaHora).toLocaleString("es-ES",{month:"short"});
+                    let mesKey = mes.charAt(0).toUpperCase()+mes.slice(1,3);
+                    if(meses[mesKey] !== undefined) {
+                        meses[mesKey]++;
+                    }
+                }
+            });
+
+            const bars = document.querySelectorAll(".bar-chart .bar");
+            let i=0;
+            for (let mes in meses) {
+                let cantidad = meses[mes];
+                // Ajustar altura máxima al 100% para mejor visualización
+                let altura = Math.min((cantidad * 20) + 10, 100);
+                bars[i].style.height = altura + "%";
+                bars[i].querySelector(".bar-label").textContent = mes;
+                bars[i].setAttribute('title', `${cantidad} incidentes`);
+                i++;
+            }
+        }
+
+        // Función para exportar Excel
+        function exportarExcel(tipo) {
+            window.open('http://localhost:8081/api/' + tipo, '_blank');
+        }
+
+        // Cargar dashboard cuando la página esté lista
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("🚀 Inicializando dashboard admin...");
+            cargarDashboard();
+            
+            // Recargar cada 30 segundos para datos en tiempo real
+            setInterval(cargarDashboard, 30000);
+        });
+    </script>
+</body>
+</html>

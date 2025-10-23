@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Capacitaciones | Admin</title>
+    <link rel="stylesheet" href="estilos.css">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-window">
+        <div class="title-bar">
+            <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span>
+            <div class="window-controls">
+                <span class="control-btn" title="Minimizar">_</span>
+                <span class="control-btn" title="Maximizar">☐</span>
+                <span class="control-btn" title="Cerrar">X</span>
+            </div>
+        </div>
+
+        <div class="app-container">
+            <aside class="sidebar">
+                <h2>Módulos</h2>
+                <nav>
+                    <a href="admin_dashboard.html">📊 Dashboard / Inicio</a>
+                    <a href="incidentes.html">📝 Incidentes</a>
+                    <a href="comentarios_admin.html">💬 Gestión de Comentarios</a>
+                    <a href="capacitaciones.html" class="active">📘 Capacitaciones</a>
+                    <a href="../login.php" class="logout-btn">➡️ Cerrar Sesión</a>
+                </nav>
+            </aside>
+            
+            <main class="main-content">
+                <h2>📘 Gestión de Capacitaciones</h2>
+
+                <!-- Formulario para programar -->
+                <section class="form-section">
+                    <h3>➕ Programar Nueva Capacitación</h3>
+                    <form id="form-capacitacion">
+                        <label for="tema">Tema de la Capacitación:</label>
+                        <input type="text" id="tema" name="tema" placeholder="Ej: Uso seguro de herramientas" required>
+
+                        <label for="fecha">Fecha:</label>
+                        <input type="date" id="fecha" name="fecha" required>
+
+                        <label for="hora">Hora:</label>
+                        <input type="time" id="hora" name="hora" required>
+
+                        <label for="duracion">Duración (horas):</label>
+                        <input type="number" id="duracion" name="duracion" min="1" placeholder="2">
+
+                        <label for="responsable">Responsable / Instructor:</label>
+                        <input type="text" id="responsable" name="responsable" placeholder="Nombre del instructor" required>
+
+                        <label for="area">Área Asignada:</label>
+                        <select id="area" name="area">
+                            <option value="Todos">Todos los empleados</option>
+                            <option value="Producción">Producción</option>
+                            <option value="Logística">Logística</option>
+                            <option value="Administración">Administración</option>
+                            <option value="Mantenimiento">Mantenimiento</option>
+                        </select>
+
+                        <button type="submit">➕ Programar Capacitación</button>
+                    </form>
+                </section>
+
+                <!-- Lista de capacitaciones -->
+                <section class="tabla-capacitaciones">
+                    <h3>📅 Capacitaciones Programadas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tema</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Duración</th>
+                                <th>Responsable</th>
+                                <th>Área</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-capacitaciones">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- Calendario -->
+                <section class="calendario-section">
+                    <h3>🗓️ Calendario de Capacitaciones</h3>
+                    <div id="calendar"></div>
+                </section>
+                <!-- 📤 Exportación a Excel -->
+                <section class="exportar-section">
+                    <h3>📤 Exportar Capacitaciones a Excel</h3>
+                    <div class="export-buttons">
+                        <button class="btn-excel" onclick="exportarExcel('capacitaciones')">📘 Capacitaciones</button>
+                    </div>
+                </section>
+
+                <script>
+                function exportarExcel(tipo) {
+                    window.open('../backend/exportar_excel.php?tipo=' + tipo, '_blank');
+                }
+                </script>
+            </main>
+        </div>
+    </div>
+    <script>
+        // Función para cargar capacitaciones
+        async function cargarCapacitaciones() {
+            try {
+                console.log("📘 Cargando capacitaciones...");
+                
+                const response = await fetch('http://localhost:8081/api/capacitaciones');
+                const capacitaciones = await response.json();
+                
+                console.log("✅ Capacitaciones cargadas:", capacitaciones.length);
+                actualizarListaCapacitaciones(capacitaciones);
+                actualizarCalendario(capacitaciones);
+                
+            } catch (error) {
+                console.error('❌ Error cargando capacitaciones:', error);
+                const tabla = document.getElementById('lista-capacitaciones');
+                tabla.innerHTML = '<tr><td colspan="7">Error cargando capacitaciones</td></tr>';
+            }
+        }
+
+        // Actualizar lista de capacitaciones
+        function actualizarListaCapacitaciones(capacitaciones) {
+            const tabla = document.getElementById('lista-capacitaciones');
+            tabla.innerHTML = '';
+    
+            if (capacitaciones.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="7">No hay capacitaciones programadas</td></tr>';
+                return;
+            }
+    
+            // Ordenar por fecha (más próximas primero)
+            capacitaciones.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            
+            capacitaciones.forEach(cap => {
+                const fecha = new Date(cap.fecha).toLocaleDateString();
+                const hora = cap.hora ? cap.hora.substring(0, 5) : '--:--';
+                
+                const fila = `
+                    <tr>
+                        <td>${cap.tema}</td>
+                        <td>${fecha}</td>
+                        <td>${hora}</td>
+                        <td>${cap.duracion || '2'} horas</td>
+                        <td>${cap.responsable}</td>
+                        <td>${cap.area}</td>
+                        <td>
+                            <button class="btn-small danger" onclick="eliminarCapacitacion(${cap.id})">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+                tabla.innerHTML += fila;
+            });
+        }
+
+        // Actualizar calendario (versión simplificada)
+        function actualizarCalendario(capacitaciones) {
+            const calendarEl = document.getElementById('calendar');
+            
+            // Limpiar calendario existente
+            calendarEl.innerHTML = '';
+            
+            if (capacitaciones.length === 0) {
+                calendarEl.innerHTML = '<p>No hay capacitaciones programadas</p>';
+                return;
+            }
+    
+            // Crear elementos simples para el calendario
+            capacitaciones.forEach(cap => {
+                const fecha = new Date(cap.fecha).toLocaleDateString();
+                const eventoDiv = document.createElement('div');
+                eventoDiv.className = 'calendario-evento';
+                eventoDiv.innerHTML = `
+                    <strong>${fecha} ${cap.hora?.substring(0, 5) || ''}</strong><br>
+                    ${cap.tema}<br>
+                    <small>Por: ${cap.responsable}</small>
+                `;
+                eventoDiv.style.cssText = `
+                    background: #e3f2fd; 
+                    border-left: 4px solid #2196f3; 
+                    padding: 10px; 
+                    margin: 5px 0; 
+                    border-radius: 4px;
+                `;
+                calendarEl.appendChild(eventoDiv);
+            });
+        }
+
+        // Eliminar capacitación
+        async function eliminarCapacitacion(id) {
+            if (!confirm('¿Eliminar esta capacitación?')) return;
+            
+            try {
+                const response = await fetch(`http://localhost:8081/api/capacitaciones/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('🗑️ Capacitación eliminada');
+                    cargarCapacitaciones();
+                } else {
+                    alert('❌ Error al eliminar capacitación');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error de conexión');
+            }
+        }
+
+        // Enviar nueva capacitación
+        document.getElementById('form-capacitacion').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                tema: document.getElementById('tema').value,
+                fecha: document.getElementById('fecha').value,
+                hora: document.getElementById('hora').value,
+                duracion: parseInt(document.getElementById('duracion').value) || 2,
+                responsable: document.getElementById('responsable').value,
+                area: document.getElementById('area').value
+            };
+
+            // Validaciones
+            if (!formData.tema || !formData.fecha || !formData.hora || !formData.responsable) {
+                alert("Por favor complete todos los campos obligatorios");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8081/api/capacitaciones', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const capacitacionGuardada = await response.json();
+                    alert('✅ Capacitación programada correctamente');
+                    this.reset();
+                    cargarCapacitaciones(); // Recargar lista
+                } else {
+                    const error = await response.json();
+                    alert('❌ Error: ' + (error.message || 'No se pudo programar la capacitación'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error de conexión con el servidor');
+            }
+        });
+
+        // Función para exportar Excel
+        function exportarExcel(tipo) {
+            window.open('http://localhost:8081/api/' + tipo, '_blank');
+        }
+
+        // Inicializar cuando la página cargue
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Inicializando gestión de capacitaciones...");
+            
+            // Establecer fecha mínima como hoy
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha').min = today;
+            
+            // Cargar capacitaciones al inicio
+            cargarCapacitaciones();
+            
+            // Actualizar automáticamente cada 30 segundos
+            setInterval(() => {
+                cargarCapacitaciones();
+                console.log("🔄 Actualizando capacitaciones automáticamente...");
+            }, 30000);
+        });
+    </script>
+</body>
+</html>
