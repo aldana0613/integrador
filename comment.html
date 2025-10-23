@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comentarios y Retroalimentación | Seguridad Industrial</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="app-window">
+    <div class="title-bar">
+      <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span>
+      <div class="window-controls">
+        <span class="control-btn" title="Minimizar">_</span>
+        <span class="control-btn" title="Maximizar">☐</span>
+        <span class="control-btn" title="Cerrar">X</span>
+      </div>
+    </div>
+
+    <div class="app-container">
+      <aside class="sidebar">
+        <h2>Módulos</h2>
+        <nav>
+          <a href="admin_dashboard.html" class="active">📊 Dashboard / Inicio</a>
+          <a href="incidentes.html">📝 Incidentes</a>
+          <!-- corregí el enlace para que apunte al nombre correcto -->
+          <a href="comment.html">💬 Gestión de Comentarios</a>
+          <a href="capacitaciones.html">📘 Capacitaciones</a>
+          <a href="login.html" class="logout-btn">➡️ Cerrar Sesión</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <h2>Comentarios y Retroalimentación de Empleados</h2>
+
+        <section class="filtros-comentarios">
+          <h3>Filtrar Comentarios</h3>
+          <label for="estado">Estado:</label>
+          <select id="estado">
+            <option value="">Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="atendido">Atendido</option>
+          </select>
+          <!-- id único y claro -->
+          <button id="btn-filtrar" class="btn">Aplicar Filtros</button>
+        </section>
+
+        <section class="tabla-comentarios">
+          <h3>Listado de Comentarios Recibidos</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Empleado</th>
+                <th>Fecha</th>
+                <th>Comentario</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <!-- tbody vacío: será llenado por JS -->
+            <tbody id="lista-comentarios"></tbody>
+          </table>
+        </section>
+
+        <section class="exportar">
+          <h3>Exportar Comentarios</h3>
+          <button id="export-pdf" class="btn">📄 Exportar PDF</button>
+          <button id="export-xlsx" class="btn">📊 Exportar Excel</button>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // renderiza la tabla; si 'filtro' está vacío muestra todo
+    function renderComentarios(filtro = "") {
+      let lista = JSON.parse(localStorage.getItem("comentarios")) || [];
+      const tabla = document.getElementById("lista-comentarios");
+      tabla.innerHTML = "";
+
+      if (filtro) {
+        filtro = filtro.toString().toLowerCase();
+        lista = lista.filter(c => (c.estado || "").toString().toLowerCase() === filtro);
+      }
+
+      if (lista.length === 0) {
+        tabla.innerHTML = "<tr><td colspan='6'>No hay comentarios registrados</td></tr>";
+        return;
+      }
+
+      lista.forEach(c => {
+        // mostrar estado con la primera letra en mayúscula
+        const estadoDisplay = (c.estado || "").toString();
+        const fila = `
+          <tr>
+            <td>#${c.id}</td>
+            <td>${c.empleado}</td>
+            <td>${c.fecha}</td>
+            <td>${c.comentario}</td>
+            <td><span class="estado ${estadoDisplay.toLowerCase()}">${estadoDisplay}</span></td>
+            <td>
+              <button class="btn-small success" onclick="marcarAtendido('${c.id}')">Marcar como Atendido</button>
+              <button class="btn-small danger" onclick="eliminarComentario('${c.id}')">Eliminar</button>
+            </td>
+          </tr>`;
+        tabla.insertAdjacentHTML("beforeend", fila);
+      });
+    }
+
+    // marcar como atendido (no recarga la página)
+    function marcarAtendido(id) {
+      let lista = JSON.parse(localStorage.getItem("comentarios")) || [];
+      lista = lista.map(c => c.id === id ? {...c, estado: "atendido"} : c);
+      localStorage.setItem("comentarios", JSON.stringify(lista));
+      // conserva el filtro activo
+      const filtroActual = document.getElementById("estado").value;
+      renderComentarios(filtroActual);
+    }
+
+    // eliminar comentario (no recarga)
+    function eliminarComentario(id) {
+      if (!confirm("¿Eliminar este comentario?")) return;
+      let lista = JSON.parse(localStorage.getItem("comentarios")) || [];
+      lista = lista.filter(c => c.id !== id);
+      localStorage.setItem("comentarios", JSON.stringify(lista));
+      const filtroActual = document.getElementById("estado").value;
+      renderComentarios(filtroActual);
+    }
+
+    // inicialización tras cargar DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      // listener del botón filtro
+      const btnFiltrar = document.getElementById("btn-filtrar");
+      btnFiltrar.addEventListener("click", () => {
+        const estado = document.getElementById("estado").value;
+        renderComentarios(estado);
+      });
+
+      // render inicial (sin filtro)
+      renderComentarios();
+
+      // opcional: si quieres que al cambiar el select se aplique al instante
+      document.getElementById("estado").addEventListener("change", (e) => {
+        renderComentarios(e.target.value);
+      });
+    });
+
+    // -----------------------
+    // NOTA DE PRUEBA (opcional)
+    // Si quieres crear algunos comentarios de ejemplo en localStorage (solo para test),
+    // descomenta este bloque una vez para que se llenen y luego coméntalo:
+    /*
+    (function crearEjemplo(){
+      if(!localStorage.getItem("comentarios")) {
+        const ejemplo = [
+          { id: "C1", empleado: "Juan P.", fecha: "29/09/2025", comentario: "Se debe mejorar la señalización", estado: "pendiente" },
+          { id: "C2", empleado: "María L.", fecha: "20/09/2025", comentario: "EPP no entregado a tiempo", estado: "atendido" }
+        ];
+        localStorage.setItem("comentarios", JSON.stringify(ejemplo));
+      }
+    })();
+    */
+  </script>
+</body>
+</html>
