@@ -1,18 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gestión de Capacitaciones | Admin</title>
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="estilos.css" />
     <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
+    <!-- Librería XLSX para exportar Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        .logout-top {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .logout-top:hover {
+            background: #b02a37;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        thead {
+            background-color: #f0f0f0;
+        }
+
+        .btn-accion {
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-editar {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-editar:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-eliminar {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-eliminar:hover {
+            background-color: #b02a37;
+        }
+
+        .tabla-capacitaciones {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <div class="app-window">
         <div class="title-bar">
             <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span>
             <div class="window-controls">
+                <button class="logout-top" onclick="window.location.href='../login.php'">➡️ Cerrar Sesión</button>
                 <span class="control-btn" title="Minimizar">_</span>
                 <span class="control-btn" title="Maximizar">☐</span>
                 <span class="control-btn" title="Cerrar">X</span>
@@ -27,31 +93,30 @@
                     <a href="incidentes.html">📝 Incidentes</a>
                     <a href="comentarios_admin.html">💬 Gestión de Comentarios</a>
                     <a href="capacitaciones.html" class="active">📘 Capacitaciones</a>
-                    <a href="../login.php" class="logout-btn">➡️ Cerrar Sesión</a>
                 </nav>
             </aside>
-            
+
             <main class="main-content">
                 <h2>📘 Gestión de Capacitaciones</h2>
 
-                <!-- Formulario para programar -->
+                <!-- Formulario -->
                 <section class="form-section">
                     <h3>➕ Programar Nueva Capacitación</h3>
                     <form id="form-capacitacion">
                         <label for="tema">Tema de la Capacitación:</label>
-                        <input type="text" id="tema" name="tema" placeholder="Ej: Uso seguro de herramientas" required>
+                        <input type="text" id="tema" name="tema" placeholder="Ej: Uso seguro de herramientas" required />
 
                         <label for="fecha">Fecha:</label>
-                        <input type="date" id="fecha" name="fecha" required>
+                        <input type="date" id="fecha" name="fecha" required />
 
                         <label for="hora">Hora:</label>
-                        <input type="time" id="hora" name="hora" required>
+                        <input type="time" id="hora" name="hora" required />
 
                         <label for="duracion">Duración (horas):</label>
-                        <input type="number" id="duracion" name="duracion" min="1" placeholder="2">
+                        <input type="number" id="duracion" name="duracion" min="1" placeholder="2" />
 
                         <label for="responsable">Responsable / Instructor:</label>
-                        <input type="text" id="responsable" name="responsable" placeholder="Nombre del instructor" required>
+                        <input type="text" id="responsable" name="responsable" placeholder="Nombre del instructor" required />
 
                         <label for="area">Área Asignada:</label>
                         <select id="area" name="area">
@@ -66,7 +131,7 @@
                     </form>
                 </section>
 
-                <!-- Lista de capacitaciones -->
+                <!-- Tabla con columna Acciones -->
                 <section class="tabla-capacitaciones">
                     <h3>📅 Capacitaciones Programadas</h3>
                     <table>
@@ -81,8 +146,46 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-capacitaciones">
-                            <!-- Se llena dinámicamente -->
+                        <tbody>
+                            <tr>
+                                <td>Uso seguro de herramientas</td>
+                                <td>14/10/2025</td>
+                                <td>10:00</td>
+                                <td>2 horas</td>
+                                <td>Ing. Safety</td>
+                                <td>Producción</td>
+                                <td>
+                                    <button class="btn-accion btn-editar" onclick="editarCapacitacion(this)">✏️ Editar</button>
+                                    <button class="btn-accion btn-eliminar" onclick="eliminarCapacitacion(this)">🗑️ Eliminar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Manejo de productos químicos</td>
+                                <td>19/10/2025</td>
+                                <td>14:00</td>
+                                <td>3 horas</td>
+                                <td>Dr. Security</td>
+                                <td>Todos</td>
+                                <td>
+                                    <button class="btn-accion btn-editar" onclick="editarCapacitacion(this)">✏️ Editar</button>
+                                    <button class="btn-accion btn-eliminar" onclick="eliminarCapacitacion(this)">🗑️ Eliminar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Hola</td>
+                                <td>23/10/2025</td>
+                                <td>10:15</td>
+                                <td>2 horas</td>
+                                <td>fernandito</td>
+                                <td>Todos</td>
+                                <td>
+                                    <button class="btn-accion btn-editar" onclick="editarCapacitacion(this)">✏️ Editar</button>
+                                    <button class="btn-accion btn-eliminar" onclick="eliminarCapacitacion(this)">🗑️ Eliminar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="7" style="text-align: center; font-weight: bold; color: #555;">Fin de capacitaciones</td>
+                            </tr>
                         </tbody>
                     </table>
                 </section>
@@ -90,197 +193,130 @@
                 <!-- Calendario -->
                 <section class="calendario-section">
                     <h3>🗓️ Calendario de Capacitaciones</h3>
-                    <div id="calendar"></div>
-                </section>
-                <!-- 📤 Exportación a Excel -->
-                <section class="exportar-section">
-                    <h3>📤 Exportar Capacitaciones a Excel</h3>
-                    <div class="export-buttons">
-                        <button class="btn-excel" onclick="exportarExcel('capacitaciones')">📘 Capacitaciones</button>
+                    <div id="calendar">
+                        <div class="calendario-evento" style="background:#e3f2fd;border-left:4px solid #2196f3;padding:10px;margin:5px 0;border-radius:4px;">
+                            <strong>14/10/2025 10:00</strong><br>Uso seguro de herramientas<br><small>Por: Ing. Safety</small>
+                        </div>
+                        <div class="calendario-evento" style="background:#e3f2fd;border-left:4px solid #2196f3;padding:10px;margin:5px 0;border-radius:4px;">
+                            <strong>19/10/2025 14:00</strong><br>Manejo de productos químicos<br><small>Por: Dr. Security</small>
+                        </div>
+                        <div class="calendario-evento" style="background:#e3f2fd;border-left:4px solid #2196f3;padding:10px;margin:5px 0;border-radius:4px;">
+                            <strong>23/10/2025 10:15</strong><br>Hola<br><small>Por: fernandito</small>
+                        </div>
                     </div>
                 </section>
 
-                <script>
-                function exportarExcel(tipo) {
-                    window.open('../backend/exportar_excel.php?tipo=' + tipo, '_blank');
-                }
-                </script>
+                <!-- Exportar -->
+                <section class="exportar-section">
+                    <h3>📤 Exportar Capacitaciones a Excel</h3>
+                    <div class="export-buttons">
+                        <button class="btn-excel" onclick="exportarExcelTabla()">📘 Exportar a Excel</button>
+                    </div>
+                </section>
+
+               <script>
+const API_URL = "http://localhost:8081/api/capacitaciones";
+
+// ✅ Cargar capacitaciones al iniciar
+document.addEventListener("DOMContentLoaded", cargarCapacitaciones);
+
+async function cargarCapacitaciones() {
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        const tbody = document.querySelector(".tabla-capacitaciones tbody");
+        tbody.innerHTML = "";
+
+        data.forEach(cap => {
+            const fila = `
+                <tr>
+                    <td>${cap.tema}</td>
+                    <td>${cap.fecha}</td>
+                    <td>${cap.hora || ""}</td>
+                    <td>${cap.duracion} horas</td>
+                    <td>${cap.responsable}</td>
+                    <td>${cap.area}</td>
+                    <td>
+                        <button class="btn-accion btn-editar" onclick="editarCapacitacion('${cap.id}')">✏️ Editar</button>
+                        <button class="btn-accion btn-eliminar" onclick="eliminarCapacitacion('${cap.id}')">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += fila;
+        });
+
+    } catch (err) {
+        console.error("Error cargando capacitaciones", err);
+        alert("❌ Error al cargar datos del servidor");
+    }
+}
+
+// ✅ Registrar capacitación
+document.getElementById("form-capacitacion").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const datos = {
+        tema: document.getElementById("tema").value,
+        fecha: document.getElementById("fecha").value,
+        hora: document.getElementById("hora").value,
+        duracion: document.getElementById("duracion").value,
+        responsable: document.getElementById("responsable").value,
+        area: document.getElementById("area").value
+    };
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos)
+        });
+
+        alert("✅ Capacitación registrada");
+        e.target.reset();
+        cargarCapacitaciones();
+
+    } catch (err) {
+        alert("❌ Error registrando capacitación");
+    }
+});
+
+// ✅ Borrar capacitación
+async function eliminarCapacitacion(id) {
+    if (!confirm("¿Eliminar esta capacitación?")) return;
+
+    try {
+        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        alert("🗑️ Eliminada");
+        cargarCapacitaciones();
+    } catch {
+        alert("❌ Error al eliminar");
+    }
+}
+
+// ✅ Enviar a página de edición
+function editarCapacitacion(id) {
+    window.location.href = `editar_capacitacion.html?id=${id}`;
+}
+
+// ✅ Exportar tabla a Excel sin columna Acciones (Tu código original)
+function exportarExcelTabla() {
+    const tabla = document.querySelector('.tabla-capacitaciones table');
+    if (!tabla) {
+        alert('No se encontró la tabla de capacitaciones.');
+        return;
+    }
+    const tablaClon = tabla.cloneNode(true);
+    for (let fila of tablaClon.rows) {
+        if (fila.cells.length > 6) fila.deleteCell(-1);
+    }
+    const wb = XLSX.utils.table_to_book(tablaClon, { sheet: 'Capacitaciones' });
+    XLSX.writeFile(wb, `Capacitaciones_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+</script>
+
             </main>
         </div>
     </div>
-    <script>
-        // Función para cargar capacitaciones
-        async function cargarCapacitaciones() {
-            try {
-                console.log("📘 Cargando capacitaciones...");
-                
-                const response = await fetch('http://localhost:8081/api/capacitaciones');
-                const capacitaciones = await response.json();
-                
-                console.log("✅ Capacitaciones cargadas:", capacitaciones.length);
-                actualizarListaCapacitaciones(capacitaciones);
-                actualizarCalendario(capacitaciones);
-                
-            } catch (error) {
-                console.error('❌ Error cargando capacitaciones:', error);
-                const tabla = document.getElementById('lista-capacitaciones');
-                tabla.innerHTML = '<tr><td colspan="7">Error cargando capacitaciones</td></tr>';
-            }
-        }
-
-        // Actualizar lista de capacitaciones
-        function actualizarListaCapacitaciones(capacitaciones) {
-            const tabla = document.getElementById('lista-capacitaciones');
-            tabla.innerHTML = '';
-    
-            if (capacitaciones.length === 0) {
-                tabla.innerHTML = '<tr><td colspan="7">No hay capacitaciones programadas</td></tr>';
-                return;
-            }
-    
-            // Ordenar por fecha (más próximas primero)
-            capacitaciones.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-            
-            capacitaciones.forEach(cap => {
-                const fecha = new Date(cap.fecha).toLocaleDateString();
-                const hora = cap.hora ? cap.hora.substring(0, 5) : '--:--';
-                
-                const fila = `
-                    <tr>
-                        <td>${cap.tema}</td>
-                        <td>${fecha}</td>
-                        <td>${hora}</td>
-                        <td>${cap.duracion || '2'} horas</td>
-                        <td>${cap.responsable}</td>
-                        <td>${cap.area}</td>
-                        <td>
-                            <button class="btn-small danger" onclick="eliminarCapacitacion(${cap.id})">🗑️ Eliminar</button>
-                        </td>
-                    </tr>
-                `;
-                tabla.innerHTML += fila;
-            });
-        }
-
-        // Actualizar calendario (versión simplificada)
-        function actualizarCalendario(capacitaciones) {
-            const calendarEl = document.getElementById('calendar');
-            
-            // Limpiar calendario existente
-            calendarEl.innerHTML = '';
-            
-            if (capacitaciones.length === 0) {
-                calendarEl.innerHTML = '<p>No hay capacitaciones programadas</p>';
-                return;
-            }
-    
-            // Crear elementos simples para el calendario
-            capacitaciones.forEach(cap => {
-                const fecha = new Date(cap.fecha).toLocaleDateString();
-                const eventoDiv = document.createElement('div');
-                eventoDiv.className = 'calendario-evento';
-                eventoDiv.innerHTML = `
-                    <strong>${fecha} ${cap.hora?.substring(0, 5) || ''}</strong><br>
-                    ${cap.tema}<br>
-                    <small>Por: ${cap.responsable}</small>
-                `;
-                eventoDiv.style.cssText = `
-                    background: #e3f2fd; 
-                    border-left: 4px solid #2196f3; 
-                    padding: 10px; 
-                    margin: 5px 0; 
-                    border-radius: 4px;
-                `;
-                calendarEl.appendChild(eventoDiv);
-            });
-        }
-
-        // Eliminar capacitación
-        async function eliminarCapacitacion(id) {
-            if (!confirm('¿Eliminar esta capacitación?')) return;
-            
-            try {
-                const response = await fetch(`http://localhost:8081/api/capacitaciones/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('🗑️ Capacitación eliminada');
-                    cargarCapacitaciones();
-                } else {
-                    alert('❌ Error al eliminar capacitación');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión');
-            }
-        }
-
-        // Enviar nueva capacitación
-        document.getElementById('form-capacitacion').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                tema: document.getElementById('tema').value,
-                fecha: document.getElementById('fecha').value,
-                hora: document.getElementById('hora').value,
-                duracion: parseInt(document.getElementById('duracion').value) || 2,
-                responsable: document.getElementById('responsable').value,
-                area: document.getElementById('area').value
-            };
-
-            // Validaciones
-            if (!formData.tema || !formData.fecha || !formData.hora || !formData.responsable) {
-                alert("Por favor complete todos los campos obligatorios");
-                return;
-            }
-
-            try {
-                const response = await fetch('http://localhost:8081/api/capacitaciones', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (response.ok) {
-                    const capacitacionGuardada = await response.json();
-                    alert('✅ Capacitación programada correctamente');
-                    this.reset();
-                    cargarCapacitaciones(); // Recargar lista
-                } else {
-                    const error = await response.json();
-                    alert('❌ Error: ' + (error.message || 'No se pudo programar la capacitación'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión con el servidor');
-            }
-        });
-
-        // Función para exportar Excel
-        function exportarExcel(tipo) {
-            window.open('http://localhost:8081/api/' + tipo, '_blank');
-        }
-
-        // Inicializar cuando la página cargue
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("🚀 Inicializando gestión de capacitaciones...");
-            
-            // Establecer fecha mínima como hoy
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('fecha').min = today;
-            
-            // Cargar capacitaciones al inicio
-            cargarCapacitaciones();
-            
-            // Actualizar automáticamente cada 30 segundos
-            setInterval(() => {
-                cargarCapacitaciones();
-                console.log("🔄 Actualizando capacitaciones automáticamente...");
-            }, 30000);
-        });
-    </script>
 </body>
 </html>
