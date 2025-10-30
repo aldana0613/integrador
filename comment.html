@@ -5,12 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Comentarios y Retroalimentación | Seguridad Industrial</title>
   <link rel="stylesheet" href="estilos.css">
+  <style>
+    /* 🔹 Estilos del botón de cerrar sesión */
+    .logout-btn-top {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+      margin-right: 10px;
+    }
+
+    .logout-btn-top:hover {
+      background: #b02a37;
+    }
+
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .control-btn {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0 5px;
+    }
+
+    .title-bar {
+      background: #0d6efd;
+      color: white;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <div class="app-window">
     <div class="title-bar">
       <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span>
       <div class="window-controls">
+        <!-- 🔹 Botón de cerrar sesión agregado -->
+        <a href="login.html" class="logout-btn-top" title="Cerrar Sesión">➡️ Cerrar Sesión</a>
         <span class="control-btn" title="Minimizar">_</span>
         <span class="control-btn" title="Maximizar">☐</span>
         <span class="control-btn" title="Cerrar">X</span>
@@ -23,10 +65,8 @@
         <nav>
           <a href="admin_dashboard.html" class="active">📊 Dashboard / Inicio</a>
           <a href="incidentes.html">📝 Incidentes</a>
-          <!-- corregí el enlace para que apunte al nombre correcto -->
           <a href="comment.html">💬 Gestión de Comentarios</a>
           <a href="capacitaciones.html">📘 Capacitaciones</a>
-          <a href="login.html" class="logout-btn">➡️ Cerrar Sesión</a>
         </nav>
       </aside>
 
@@ -41,7 +81,6 @@
             <option value="pendiente">Pendiente</option>
             <option value="atendido">Atendido</option>
           </select>
-          <!-- id único y claro -->
           <button id="btn-filtrar" class="btn">Aplicar Filtros</button>
         </section>
 
@@ -58,7 +97,6 @@
                 <th>Acciones</th>
               </tr>
             </thead>
-            <!-- tbody vacío: será llenado por JS -->
             <tbody id="lista-comentarios"></tbody>
           </table>
         </section>
@@ -73,7 +111,6 @@
   </div>
 
   <script>
-    // renderiza la tabla; si 'filtro' está vacío muestra todo
     function renderComentarios(filtro = "") {
       let lista = JSON.parse(localStorage.getItem("comentarios")) || [];
       const tabla = document.getElementById("lista-comentarios");
@@ -90,7 +127,6 @@
       }
 
       lista.forEach(c => {
-        // mostrar estado con la primera letra en mayúscula
         const estadoDisplay = (c.estado || "").toString();
         const fila = `
           <tr>
@@ -108,17 +144,14 @@
       });
     }
 
-    // marcar como atendido (no recarga la página)
     function marcarAtendido(id) {
       let lista = JSON.parse(localStorage.getItem("comentarios")) || [];
       lista = lista.map(c => c.id === id ? {...c, estado: "atendido"} : c);
       localStorage.setItem("comentarios", JSON.stringify(lista));
-      // conserva el filtro activo
       const filtroActual = document.getElementById("estado").value;
       renderComentarios(filtroActual);
     }
 
-    // eliminar comentario (no recarga)
     function eliminarComentario(id) {
       if (!confirm("¿Eliminar este comentario?")) return;
       let lista = JSON.parse(localStorage.getItem("comentarios")) || [];
@@ -128,39 +161,17 @@
       renderComentarios(filtroActual);
     }
 
-    // inicialización tras cargar DOM
     document.addEventListener("DOMContentLoaded", () => {
-      // listener del botón filtro
       const btnFiltrar = document.getElementById("btn-filtrar");
       btnFiltrar.addEventListener("click", () => {
         const estado = document.getElementById("estado").value;
         renderComentarios(estado);
       });
-
-      // render inicial (sin filtro)
       renderComentarios();
-
-      // opcional: si quieres que al cambiar el select se aplique al instante
       document.getElementById("estado").addEventListener("change", (e) => {
         renderComentarios(e.target.value);
       });
     });
-
-    // -----------------------
-    // NOTA DE PRUEBA (opcional)
-    // Si quieres crear algunos comentarios de ejemplo en localStorage (solo para test),
-    // descomenta este bloque una vez para que se llenen y luego coméntalo:
-    /*
-    (function crearEjemplo(){
-      if(!localStorage.getItem("comentarios")) {
-        const ejemplo = [
-          { id: "C1", empleado: "Juan P.", fecha: "29/09/2025", comentario: "Se debe mejorar la señalización", estado: "pendiente" },
-          { id: "C2", empleado: "María L.", fecha: "20/09/2025", comentario: "EPP no entregado a tiempo", estado: "atendido" }
-        ];
-        localStorage.setItem("comentarios", JSON.stringify(ejemplo));
-      }
-    })();
-    */
   </script>
 </body>
 </html>
