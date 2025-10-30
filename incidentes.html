@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Incidencias | Seguridad Industrial</title>
+    <link rel="stylesheet" href="estilos.css">
+    <!-- 📦 Librería jsPDF para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-window">
+        <div class="title-bar">
+            <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span>
+            <div class="window-controls">
+                <span class="control-btn" title="Minimizar">_</span>
+                <span class="control-btn" title="Maximizar">☐</span>
+                <span class="control-btn" title="Cerrar">X</span>
+            </div>
+        </div>
+
+        <div class="app-container">
+            <!-- 📌 Sidebar -->
+            <aside class="sidebar">
+                <h2>Módulos</h2>
+                <nav>
+                    <a href="admin_dashboard.html">📊 Dashboard / Inicio</a>
+                    <a href="incidentes.html" class="active">📝 Incidentes</a>
+                    <a href="comentarios_admin.html">💬 Gestión de Comentarios</a>
+                    <a href="capacitaciones.html">📘 Capacitaciones</a>
+                    <a href="login.html" class="logout-btn">➡️ Cerrar Sesión</a>
+                </nav>
+            </aside>
+
+            <!-- 📌 Contenido principal -->
+            <main class="main-content">
+                <h2>Gestión de Incidencias</h2>
+
+                <!-- 📋 Listado de Incidencias -->
+                <section class="tabla-incidencias">
+                    <h3>Listado de Incidencias Registradas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Ubicación</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Aquí se insertan las filas dinámicamente -->
+                        </tbody>
+                    </table>
+                </section>
+                <!-- 📤 Exportación a Excel - NUEVA SECCIÓN -->
+                <section class="exportar-section">
+                    <h3>📤 Exportar Incidentes a Excel</h3>
+                    <div class="export-buttons">
+                        <button class="btn-excel" onclick="exportarExcel('incidentes')">
+                            📊 Exportar Incidentes
+                        </button>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Función para cargar incidentes
+        async function cargarIncidentes() {
+            try {
+                console.log("🚨 Cargando incidentes...");
+                
+                const response = await fetch('http://localhost:8081/api/incidentes');
+                const incidentes = await response.json();
+                
+                console.log("✅ Incidentes cargados:", incidentes.length);
+                mostrarIncidencias(incidentes);
+            } catch (error) {
+                console.error('❌ Error cargando incidentes:', error);
+                const tabla = document.querySelector(".tabla-incidencias tbody");
+                tabla.innerHTML = '<tr><td colspan="7">Error cargando incidentes</td></tr>';
+            }
+        }
+
+        // Mostrar incidentes en la tabla
+        function mostrarIncidencias(incidentes) {
+            const tabla = document.querySelector(".tabla-incidencias tbody");
+            tabla.innerHTML = "";
+
+            if (incidentes.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="7">No hay incidentes registrados</td></tr>';
+                return;
+            }
+
+            // Ordenar por fecha (más recientes primero)
+            incidentes.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+
+            incidentes.forEach(inc => {
+                const fecha = new Date(inc.fechaHora).toLocaleDateString();
+                const estadoClass = inc.estado?.toLowerCase().replace(' ', '-') || 'pendiente';
+                
+                tabla.innerHTML += `
+                    <tr>
+                        <td>#${inc.id}</td>
+                        <td>${fecha}</td>
+                        <td>${inc.tipoIncidencia}</td>
+                        <td>${inc.ubicacion}</td>
+                        <td>${inc.descripcion}</td>
+                        <td><span class="estado ${estadoClass}">${inc.estado}</span></td>
+                        <td>
+                            <button class="btn-small" onclick="editarIncidente(${inc.id})">✏️ Editar</button>
+                            <button class="btn-small danger" onclick="eliminarIncidente(${inc.id})">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Editar incidente
+        async function editarIncidente(id) {
+            const nuevoEstado = prompt("Nuevo estado del incidente:\n(Pendiente, En Investigación, Resuelto)");
+            
+            if (nuevoEstado && nuevoEstado.trim() !== '') {
+                try {
+                    // Primero obtener el incidente actual
+                    const responseGet = await fetch(`http://localhost:8081/api/incidentes/${id}`);
+                    const incidente = await responseGet.json();
+                    
+                    if (incidente) {
+                        // Actualizar solo el estado
+                        incidente.estado = nuevoEstado.trim();
+                        
+                        const responsePut = await fetch(`http://localhost:8081/api/incidentes/${id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(incidente)
+                        });
+                        
+                        if (responsePut.ok) {
+                            alert("✅ Incidente actualizado correctamente.");
+                            cargarIncidentes(); // Recargar la lista
+                        } else {
+                            alert("❌ Error al actualizar el incidente.");
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert("❌ Error de conexión");
+                }
+            }
+        }
+
+        // Eliminar incidente
+        async function eliminarIncidente(id) {
+            if (!confirm("¿Seguro que deseas eliminar este incidente permanentemente?")) return;
+
+            try {
+                const response = await fetch(`http://localhost:8081/api/incidentes/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert("🗑️ Incidente eliminado correctamente.");
+                    cargarIncidentes(); // Recargar la lista
+                } else {
+                    alert("❌ Error al eliminar el incidente.");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("❌ Error de conexión");
+            }
+        }
+
+        // Función para exportar Excel
+        function exportarExcel(tipo) {
+            window.open('http://localhost:8081/api/' + tipo, '_blank');
+        }
+
+        // Inicializar cuando la página cargue
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Inicializando gestión de incidentes...");
+            
+            // Cargar incidentes al inicio
+            cargarIncidentes();
+            
+            // Actualizar automáticamente cada 30 segundos
+            setInterval(() => {
+                cargarIncidentes();
+                console.log("🔄 Actualizando incidentes automáticamente...");
+            }, 30000);
+        });
+    </script>
+</body>
+</html>
