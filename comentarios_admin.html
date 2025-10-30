@@ -3,140 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Comentarios | Admin</title>
-    
-    <!-- FORZAR CARGA DE CSS SIN CACHÉ -->
-    <link rel="stylesheet" href="estilos.css?version=2.1">
-    
+    <title>Administrador | Seguridad Industrial</title>
+    <link rel="stylesheet" href="estilos.css">
     <style>
-        /* ESTILOS DE EMERGENCIA - SE CARGAN INMEDIATAMENTE */
-        * {
-            box-sizing: border-box;
-        }
-        
         body {
-            background-color: #e9e9e9 !important;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            min-height: 100vh !important;
+            font-family: Arial, sans-serif;
+            background: #f7f9fb;
+            color: #333;
+            margin: 0;
         }
-        
+
         .app-window {
-            width: 950px !important;
-            height: 700px !important;
-            background-color: white !important;
-            border: 1px solid #aaa !important;
-            border-radius: 6px !important;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
-        
+
+        /* 🔹 Barra superior */
         .title-bar {
-            background-color: #0078d7 !important;
-            color: white !important;
-            padding: 6px 10px !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
+            background: #0d6efd;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            position: relative;
         }
-        
+
+        .window-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-btn {
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 5px;
+        }
+
+        /* 🔹 Botón rojo de cerrar sesión (arriba derecha) */
+        .logout-btn-top {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .logout-btn-top:hover {
+            background: #b02a37;
+        }
+
         .app-container {
-            display: flex !important;
-            flex-grow: 1 !important;
-            height: calc(100% - 40px) !important;
-            overflow: hidden !important;
+            display: flex;
+            flex: 1;
         }
-        
+
+        /* Sidebar */
         .sidebar {
-            width: 220px !important;
-            background-color: #f2f2f2 !important;
-            border-right: 1px solid #ddd !important;
-            padding-top: 20px !important;
-            height: 100% !important;
-            overflow-y: auto !important;
+            width: 230px;
+            background: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            border-right: 1px solid #ddd;
         }
-        
+
+        .sidebar h2 {
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+            color: #0d6efd;
+        }
+
+        .sidebar nav a {
+            display: block;
+            color: #333;
+            text-decoration: none;
+            padding: 10px;
+            margin: 4px 0;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        .sidebar nav a.active {
+            background: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+
+        .sidebar nav a:hover {
+            background: #0b5ed7;
+            color: white;
+        }
+
+        /* Main */
         .main-content {
-            flex-grow: 1 !important;
-            padding: 20px !important;
-            overflow-y: auto !important;
-            height: 100% !important;
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
         }
 
-        /* Estilos específicos de exportación */
-        .exportar-section {
-            background-color: #f8f9fa !important;
-            border: 1px solid #dee2e6 !important;
-            border-radius: 5px !important;
-            padding: 20px !important;
-            margin-top: 30px !important;
+        .kpi-grid {
+            display: flex;
+            gap: 20px;
         }
 
-        .exportar-section h3 {
-            margin-top: 0 !important;
-            color: #217346 !important;
-            border-bottom: 2px solid #217346 !important;
-            padding-bottom: 10px !important;
+        .kpi-card {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
-        .export-buttons {
-            display: flex !important;
-            gap: 15px !important;
-            flex-wrap: wrap !important;
-            margin-top: 15px !important;
-        }
+        .kpi-card.danger { border-top: 4px solid #dc3545; }
+        .kpi-card.warning { border-top: 4px solid #ffc107; }
+        .kpi-card.success { border-top: 4px solid #198754; }
 
-        .btn-excel {
-            background-color: #217346 !important;
-            color: white !important;
-            padding: 12px 20px !important;
-            border: none !important;
-            border-radius: 5px !important;
-            cursor: pointer !important;
-            font-size: 14px !important;
-            font-weight: 500 !important;
-            transition: all 0.3s ease !important;
-        }
-
-        .btn-excel:hover {
-            background-color: #1a5c38 !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-        }
-
-        /* Estilos básicos de tabla */
-        table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin-top: 15px !important;
+        .tabla-incidencias table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         th, td {
-            padding: 12px 8px !important;
-            text-align: left !important;
-            border-bottom: 1px solid #ddd !important;
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
         }
 
         th {
-            background-color: #f8f9fa !important;
-            font-weight: 600 !important;
-            color: #333 !important;
+            background: #e9ecef;
+        }
+
+        .export-buttons button {
+            margin: 5px;
+            padding: 10px 15px;
+            background-color: #198754;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .export-buttons button:hover {
+            background-color: #157347;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .chart-section {
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
     <div class="app-window">
+        <!-- 🔹 Barra superior con botón de cerrar sesión -->
         <div class="title-bar">
-            <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span>
+            <span>Sistema de Gestión de Seguridad Industrial (ADMINISTRADOR)</span> 
             <div class="window-controls">
+                <a href="login.html" class="logout-btn-top" title="Cerrar Sesión">➡️ Cerrar Sesión</a>
                 <span class="control-btn" title="Minimizar">_</span>
                 <span class="control-btn" title="Maximizar">☐</span>
                 <span class="control-btn" title="Cerrar">X</span>
@@ -144,252 +188,183 @@
         </div>
 
         <div class="app-container">
+            <!-- 📌 Sidebar -->
             <aside class="sidebar">
                 <h2>Módulos</h2>
                 <nav>
-                    <a href="admin_dashboard.html">📊 Dashboard / Inicio</a>
-                    <a href="incidentes.html">📝 Incidentes</a>
-                    <a href="comentarios_admin.html" class="active">💬 Gestión de Comentarios</a>
-                    <a href="capacitaciones.html">📘 Capacitaciones</a>
-                    <a href="../login.php" class="logout-btn">➡️ Cerrar Sesión</a>
+                    <a href="admin_dashboard.html" class="menu-link">📊 Dashboard / Inicio</a>
+                    <a href="incidentes.html" class="menu-link">📝 Incidentes</a>
+                    <a href="comentarios_admin.html" class="menu-link">💬 Gestión de Comentarios</a>
+                    <a href="capacitaciones.html" class="menu-link">📘 Capacitaciones</a>
                 </nav>
             </aside>
             
+            <!-- 📌 Contenido Principal -->
             <main class="main-content">
-                <h2>Gestión de Comentarios y Sugerencias</h2>
+                <h2>Dashboard / Inicio</h2>
 
-                <!-- Filtros -->
-                <section class="filtros-comentarios">
-                    <h3>Filtrar Comentarios</h3>
-                    <label for="estado">Estado:</label>
-                    <select id="estado">
-                        <option value="">Todos</option>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="atendido">Atendido</option>
-                    </select>
-                    <button id="btn-filtrar" class="btn">Aplicar Filtros</button>
+                <section class="notificaciones">
+                    <h3>Notificaciones Importantes</h3>
+                    <div class="notificacion alerta">
+                        ⚠️ Se ha reportado un accidente en el área de Taller de Maquinaria.
+                    </div>
+                    <div class="notificacion info">
+                        ℹ️ Próxima capacitación: Uso seguro de equipos eléctricos – 1 Oct, 10:00 AM.
+                    </div>
                 </section>
 
-                <!-- Lista de comentarios -->
-                <section class="tabla-comentarios">
-                    <h3>Comentarios Recibidos</h3>
-                    <table>
+                <!-- 📊 KPIs -->
+                <section class="kpi-grid">
+                    <div class="kpi-card danger">
+                        <h3>Tasa de Frecuencia (LTIFR)</h3>
+                        <p id="ltifr">0.3</p>
+                    </div>
+                    <div class="kpi-card warning">
+                        <h3>Incidentes Reportados</h3>
+                        <p id="incidentes-count">3</p>
+                    </div>
+                    <div class="kpi-card success">
+                        <h3>Cumplimiento de Inspecciones</h3>
+                        <p id="inspecciones">98%</p>
+                    </div>
+                </section>
+
+                <!-- 📝 Tablas -->
+                <section class="tabla-incidencias">
+                    <h3>Incidencias Recientes</h3>
+                    <table id="tabla-incidentes">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Empleado</th>
                                 <th>Fecha</th>
-                                <th>Asunto</th>
-                                <th>Comentario</th>
+                                <th>Tipo</th>
+                                <th>Ubicación</th>
                                 <th>Estado</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-comentarios">
-                            <!-- Se llena dinámicamente -->
+                        <tbody>
+                            <tr><td>16/10/2025</td><td>Casi Accidente</td><td>Taller Maquinaria Pesada</td><td>Pendiente</td></tr>
+                            <tr><td>28/09/2025</td><td>Accidente con Lesión</td><td>Taller Mecánico</td><td>En Investigación</td></tr>
+                            <tr><td>20/09/2025</td><td>Casi Accidente</td><td>Zona de Carga</td><td>Resuelto</td></tr>
                         </tbody>
                     </table>
                 </section>
 
-                <!-- 📤 Exportación a Excel -->
+                <section class="tabla-incidencias">
+                    <h3>Comentarios Recientes</h3>
+                    <table id="tabla-comentarios">
+                        <thead>
+                            <tr><th>Fecha</th><th>Empleado</th><th>Comentario</th><th>Estado</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>15/10/2025</td><td>Juan Pérez</td><td>Falta iluminación en taller</td><td>Pendiente</td></tr>
+                            <tr><td>12/10/2025</td><td>María López</td><td>Se necesita EPP en zona química</td><td>Resuelto</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="tabla-incidencias">
+                    <h3>Capacitaciones Programadas</h3>
+                    <table id="tabla-capacitaciones">
+                        <thead>
+                            <tr><th>Fecha</th><th>Tema</th><th>Instructor</th><th>Estado</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>25/10/2025</td><td>Seguridad Eléctrica</td><td>Ing. Torres</td><td>Pendiente</td></tr>
+                            <tr><td>30/10/2025</td><td>Uso de Extintores</td><td>Lic. Gómez</td><td>Programada</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- 📈 Gráficos -->
+                <section class="chart-section">
+                    <h3>📊 Gráficos de Seguridad</h3>
+                    <canvas id="chartTipos" width="400" height="200"></canvas>
+                    <canvas id="chartEstados" width="400" height="200"></canvas>
+                </section>
+
+                <!-- 📤 Exportar Reportes -->
                 <section class="exportar-section">
-                    <h3>📤 Exportar Comentarios a Excel</h3>
+                    <h3>📤 Exportar Reportes</h3>
                     <div class="export-buttons">
-                        <button class="btn-excel" onclick="exportarExcel('comentarios')">
-                            💬 Exportar Comentarios
-                        </button>
+                        <button onclick="exportarExcel('incidentes')">📊 Incidentes a Excel</button>
+                        <button onclick="exportarExcel('comentarios')">💬 Comentarios a Excel</button>
+                        <button onclick="exportarExcel('capacitaciones')">📘 Capacitaciones a Excel</button>
                     </div>
-                    <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                        Los reportes se descargarán en formato Excel (.xls)
-                    </p>
                 </section>
             </main>
         </div>
     </div>
 
+    <!-- ✅ Librerías -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <script>
-        // SOLUCIÓN DEFINITIVA - FORZAR CARGA COMPLETA
-        function inicializarPagina() {
-            console.log("🔄 Inicializando página de comentarios...");
-            
-            // 1. Forzar recarga de CSS
-            const links = document.querySelectorAll('link[rel="stylesheet"]');
-            links.forEach(link => {
-                link.href = link.href.split('?')[0] + '?force=' + Date.now();
-            });
+        // 📊 Gráficos dinámicos
+        document.addEventListener("DOMContentLoaded", function () {
+            const tipos = ["Casi Accidente", "Accidente con Lesión"];
+            const cantidad = [2, 1];
 
-            // 2. Aplicar estilos críticos inmediatamente
-            document.body.style.display = 'none';
-            setTimeout(() => {
-                document.body.style.display = 'flex';
-            }, 10);
+            const estados = ["Pendiente", "En Investigación", "Resuelto"];
+            const cantidadEstados = [1, 1, 1];
 
-            // 3. Configurar navegación
-            configurarNavegacion();
-            
-            // 4. Cargar datos
-            cargarComentarios();
-            
-            // 5. Configurar eventos
-            configurarEventos();
-        }
-
-        function configurarNavegacion() {
-            const navLinks = document.querySelectorAll('.sidebar a');
-            navLinks.forEach(link => link.classList.remove('active'));
-            
-            const currentLink = document.querySelector('.sidebar a[href="comentarios_admin.html"]');
-            if (currentLink) {
-                currentLink.classList.add('active');
-            }
-        }
-
-        function configurarEventos() {
-            document.getElementById('btn-filtrar').addEventListener('click', function() {
-                const estado = document.getElementById('estado').value;
-                cargarComentarios(estado);
-            });
-            
-            document.getElementById('estado').addEventListener('change', function() {
-                cargarComentarios(this.value);
-            });
-        }
-
-        // Función para cargar comentarios
-        async function cargarComentarios(filtroEstado = '') {
-            try {
-                console.log("📝 Cargando comentarios...");
-                
-                let url = 'http://localhost:8081/api/comentarios';
-                if (filtroEstado) {
-                    url += `/estado/${filtroEstado}`;
+            new Chart(document.getElementById('chartTipos'), {
+                type: 'bar',
+                data: {
+                    labels: tipos,
+                    datasets: [{
+                        label: 'Cantidad de Incidentes',
+                        data: cantidad,
+                        backgroundColor: ['#0d6efd', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } }
                 }
-                
-                const response = await fetch(url);
-                const comentarios = await response.json();
-                
-                console.log("✅ Comentarios cargados:", comentarios.length);
-                actualizarTablaComentarios(comentarios);
-                
-            } catch (error) {
-                console.error('❌ Error cargando comentarios:', error);
-                const tabla = document.getElementById('lista-comentarios');
-                tabla.innerHTML = '<tr><td colspan="7">Error cargando comentarios</td></tr>';
-            }
-        }
-
-        // Actualizar tabla de comentarios
-        function actualizarTablaComentarios(comentarios) {
-            const tabla = document.getElementById('lista-comentarios');
-            if (!tabla) {
-                console.error('❌ No se encontró la tabla de comentarios');
-                return;
-            }
-            
-            tabla.innerHTML = '';
-    
-            if (comentarios.length === 0) {
-                tabla.innerHTML = '<tr><td colspan="7">No hay comentarios</td></tr>';
-                return;
-            }
-    
-            // Ordenar por fecha (más recientes primero)
-            comentarios.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            
-            comentarios.forEach(comentario => {
-                const fecha = new Date(comentario.fecha).toLocaleDateString();
-                const estadoClass = comentario.estado?.toLowerCase() || 'pendiente';
-                
-                const fila = `
-                    <tr>
-                        <td>#${comentario.id}</td>
-                        <td>${comentario.nombre || 'Anónimo'}</td>
-                        <td>${fecha}</td>
-                        <td>${comentario.asunto}</td>
-                        <td>${comentario.comentario}</td>
-                        <td><span class="estado ${estadoClass}">${comentario.estado}</span></td>
-                        <td>
-                            ${comentario.estado === 'pendiente' ? 
-                                `<button class="btn-small success" onclick="marcarAtendido(${comentario.id})">✅ Atendido</button>` : 
-                                ''
-                            }
-                            <button class="btn-small danger" onclick="eliminarComentario(${comentario.id})">🗑️ Eliminar</button>
-                        </td>
-                    </tr>
-                `;
-                tabla.innerHTML += fila;
             });
-        }
 
-        // Marcar comentario como atendido
-        async function marcarAtendido(id) {
-            if (!confirm('¿Marcar este comentario como atendido?')) return;
-            
-            try {
-                const response = await fetch(`http://localhost:8081/api/comentarios/${id}/atendido`, {
-                    method: 'PUT'
-                });
-                
-                if (response.ok) {
-                    alert('✅ Comentario marcado como atendido');
-                    const filtroActual = document.getElementById('estado').value;
-                    cargarComentarios(filtroActual);
-                } else {
-                    alert('❌ Error al marcar como atendido');
+            new Chart(document.getElementById('chartEstados'), {
+                type: 'pie',
+                data: {
+                    labels: estados,
+                    datasets: [{
+                        data: cantidadEstados,
+                        backgroundColor: ['#dc3545', '#0d6efd', '#198754']
+                    }]
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión');
-            }
-        }
+            });
+        });
 
-        // Eliminar comentario
-        async function eliminarComentario(id) {
-            if (!confirm('¿Eliminar este comentario permanentemente?')) return;
-            
-            try {
-                const response = await fetch(`http://localhost:8081/api/comentarios/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('🗑️ Comentario eliminado');
-                    const filtroActual = document.getElementById('estado').value;
-                    cargarComentarios(filtroActual);
-                } else {
-                    alert('❌ Error al eliminar comentario');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión');
-            }
-        }
-
-        // Función para exportar Excel
+        // 📤 Exportar tablas a Excel
         function exportarExcel(tipo) {
-            window.open('http://localhost:8081/api/' + tipo, '_blank');
+            let tablaId = '';
+            if (tipo === 'incidentes') tablaId = 'tabla-incidentes';
+            else if (tipo === 'comentarios') tablaId = 'tabla-comentarios';
+            else if (tipo === 'capacitaciones') tablaId = 'tabla-capacitaciones';
+
+            const tabla = document.getElementById(tablaId);
+            if (!tabla) {
+                alert('No se encontró la tabla: ' + tipo);
+                return;
+            }
+
+            const wb = XLSX.utils.table_to_book(tabla, { sheet: tipo });
+            XLSX.writeFile(wb, tipo + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
-        // INICIALIZACIÓN ROBUSTA
-        document.addEventListener('DOMContentLoaded', inicializarPagina);
-        
-        // Backup: también ejecutar cuando la ventana se carga completamente
-        window.addEventListener('load', function() {
-            console.log("🏁 Página completamente cargada - verificando estilos");
-            setTimeout(inicializarPagina, 100);
+        // 🔹 Resaltar enlace activo
+        document.addEventListener("DOMContentLoaded", () => {
+            const currentPage = window.location.pathname.split("/").pop();
+            const links = document.querySelectorAll(".menu-link");
+            links.forEach(link => {
+                if (link.getAttribute("href") === currentPage) {
+                    link.classList.add("active");
+                } else {
+                    link.classList.remove("active");
+                }
+            });
         });
-
-        // Forzar actualización cuando la página gana foco
-        window.addEventListener('focus', function() {
-            console.log("🎯 Página en foco - verificando estilos");
-            setTimeout(inicializarPagina, 50);
-        });
-
-        // Actualizar automáticamente cada 30 segundos
-        setInterval(() => {
-            const filtroActual = document.getElementById('estado').value;
-            cargarComentarios(filtroActual);
-        }, 30000);
     </script>
 </body>
 </html>
